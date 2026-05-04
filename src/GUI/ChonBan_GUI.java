@@ -22,6 +22,17 @@ import javax.swing.SwingConstants;
 
 import DAO.Ban_DAO;
 import Entity.Ban;
+import java.time.LocalDate;
+import java.time.LocalTime;
+
+import DAO.PhieuDatBan_DAO;
+import DAO.KhachHang_DAO;
+import DAO.NhanVien_DAO;
+
+import Entity.PhieuDatBan;
+import Entity.ChiTietDatBan;
+import Entity.KhachHang;
+import Entity.NhanVien;
 
 public class ChonBan_GUI extends JPanel implements ActionListener, ComponentListener {
 	private MainFrame mainFrame;
@@ -29,11 +40,15 @@ public class ChonBan_GUI extends JPanel implements ActionListener, ComponentList
 	private JComboBox<String> cbTrangThaiBan;
 	private JButton btnChonBan, btnQuayLai;
 	private Ban_DAO ban_dao;
+	private PhieuDatBan_DAO pdb_dao;
+	private KhachHang_DAO kh_dao;
+	private NhanVien_DAO nv_dao;
 	private ArrayList<JButton> tableButtons;
 	private JPanel pnTableDisplay;
 	private Ban ban_selected;
 	private JButton btnLamTrong;
 
+	
 	private static final Color COLOR_TRONG = new Color(144, 238, 144);
 	private static final Color COLOR_DA_DAT = new Color(211, 211, 211);
 	private static final Color COLOR_DANG_PHUC_VU = new Color(135, 206, 250);
@@ -42,6 +57,9 @@ public class ChonBan_GUI extends JPanel implements ActionListener, ComponentList
 	public ChonBan_GUI(MainFrame mainFrame) {
 		this.mainFrame = mainFrame;
 		ban_dao = new Ban_DAO();
+		pdb_dao = new PhieuDatBan_DAO();
+		kh_dao = new KhachHang_DAO();
+		nv_dao = new NhanVien_DAO();
 		tableButtons = new ArrayList<>();
 
 		setLayout(new BorderLayout(10, 10));
@@ -125,22 +143,109 @@ public class ChonBan_GUI extends JPanel implements ActionListener, ComponentList
 			return;
 		}
 
-		// trangThai = 0 (trống)
-		if (ban_selected.getTrangThai() == 0) {
-			int hoiNhac = JOptionPane.showConfirmDialog(this, "Chắc chắn chọn Bàn " + ban_selected.getMaBan() + "?",
-					"Xác nhận", JOptionPane.YES_NO_OPTION);
-			if (hoiNhac == JOptionPane.YES_OPTION) {
-				// lưu mã bàn vào lớp trung gian MainFrame
-				String maBan = ban_selected.getMaBan();
-				ArrayList<String> dsMaBan = new ArrayList<String>();
-				dsMaBan.add(maBan);
-				mainFrame.setDsMaBan(dsMaBan);
-				ban_dao.capNhatTrangThaiBan(ban_selected.getMaBan(), 1);
-				loadBanData();
-				mainFrame.switchToPanel(mainFrame.KEY_BAN_HANG);
-			}
-		} else {
+		if (ban_selected.getTrangThai() != 0) {
 			JOptionPane.showMessageDialog(this, "Bàn này không thể chọn vì đang bận!");
+			return;
+		}
+
+		int hoiNhac = JOptionPane.showConfirmDialog(
+				this,
+				"Chắc chắn chọn Bàn " + ban_selected.getMaBan() + "?",
+				"Xác nhận",
+				JOptionPane.YES_NO_OPTION
+		);
+
+		if (hoiNhac != JOptionPane.YES_OPTION) {
+			return;
+		}
+
+		try {
+			// 1. Nhập mã khách hàng
+			String maKH = JOptionPane.showInputDialog(this, "Nhập mã khách hàng:", "KH001");
+
+			if (maKH == null || maKH.trim().isEmpty()) {
+				JOptionPane.showMessageDialog(this, "Bạn chưa nhập mã khách hàng!");
+				return;
+			}
+
+			maKH = maKH.trim();
+
+			KhachHang kh = kh_dao.timKhachHangTheoMaKH(maKH);
+
+			if (kh == null) {
+				JOptionPane.showMessageDialog(this, "Không tìm thấy khách hàng có mã: " + maKH);
+				return;
+			}
+
+			// 2. Lấy nhân viên mặc định
+			// Nếu app của bạn có đăng nhập thì sau này nên lấy mã nhân viên đang đăng nhập.
+			NhanVien nv = nv_dao.timTheoMa("NV001");
+
+			if (nv == null) {
+				JOptionPane.showMessageDialog(this, "Không tìm thấy nhân viên NV001 trong database!");
+				return;
+			}
+
+			// 3. Tạo mã phiếu mới
+			String maPDB = pdb_dao.taoMaPhieuDatMoi();
+
+			// 4. Tạo phiếu đặt bàn
+			LocalDate ngayDat = LocalDate.now();
+			LocalTime gioBatDau = LocalTime.now().withSecond(0).withNano(0);
+			LocalTime gioKetThuc = gioBatDau.plusHours(2);
+
+			PhieuDatBan pdb = new PhieuDatBan(
+					maPDB,
+					ngayDat,
+					gioBatDau,
+					gioKetThuc,
+					1,
+					"Đặt bàn trực tiếp",
+					1,
+					kh,
+					nv
+			);
+
+			// 5. Tạo chi tiết đặt bàn cho bàn vừa chọn
+			ChiTietDatBan ct = new ChiTietDatBan(
+					pdb,
+					ban_selected,
+					"Đặt bàn trực tiếp"
+			);
+
+			pdb.themChiTiet(ct);
+
+			// 6. Lưu phiếu đặt bàn xuống database
+			boolean kq = pdb_dao.themPhieuDatBan(pdb);
+
+			if (!kq) {
+				JOptionPane.showMessageDialog(this, "Tạo phiếu đặt bàn thất bại!");
+				return;
+			}
+
+			// 7. Lưu dữ liệu trung gian vào MainFrame
+			String maBan = ban_selected.getMaBan();
+
+			ArrayList<String> dsMaBan = new ArrayList<String>();
+			dsMaBan.add(maBan);
+
+			mainFrame.setDsMaBan(dsMaBan);
+			mainFrame.setMaPhieuDatBan(maPDB);
+			mainFrame.setMaKhachHang(maKH);
+
+			// 8. Cập nhật trạng thái bàn
+			ban_dao.capNhatTrangThaiBan(maBan, 1);
+
+			loadBanData();
+
+			JOptionPane.showMessageDialog(this, "Đã tạo phiếu đặt bàn: " + maPDB);
+
+			// 9. Chuyển sang màn hình menu
+			mainFrame.switchToPanel(mainFrame.KEY_BAN_HANG);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(this, "Lỗi khi tạo phiếu đặt bàn: " + e.getMessage());
 		}
 	}
 

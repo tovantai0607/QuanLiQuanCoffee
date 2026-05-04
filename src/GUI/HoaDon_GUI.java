@@ -541,7 +541,7 @@ public class HoaDon_GUI extends JPanel implements ActionListener {
 			JOptionPane.showMessageDialog(this, "Vui lòng chọn Phương thức thanh toán");
 			return;
 		}
-
+		
 		hoaDonHienTai.setTrangThaiThanhToan(1);
 
 		if (hd_dao.themHoaDon(hoaDonHienTai)) {

@@ -5,22 +5,23 @@
 
              HÓA ĐƠN BÁN HÀNG
 
-Mã HĐ:       HD008
+Mã HĐ:       HD010
 Mã NV:       NV001
-Ngày tạo:    04/05/2026 14:31:20
-Mã KH:       KH001
+Ngày tạo:    04/05/2026 14:35:35
+Mã KH:       KH002
 
-Tên khách hàng:  Nguyễn Văn An
-Mã bàn:       B002
+Tên khách hàng:  Trần Thị Bình
+Mã bàn:       B004
 --------------------------------------------------
 Tên Sản Phẩm               SL    Đơn Giá Thành Tiền
 --------------------------------------------------
-Espresso                    1      40000      40000
-Trà vải                     1      45000      45000
+Trà đào cam sả              1      45000      45000
+Cacao đá xay                1      55000      55000
+Matcha đá xay               1      60000      60000
 --------------------------------------------------
-Tổng tiền:                                    85000 VND
-Giảm giá:                                      9750 VND
-Thành tiền:                                   75250 VND
+Tổng tiền:                                   160000 VND
+Giảm giá:                                     80000 VND
+Thành tiền:                                   80000 VND
 Phương thức thanh toán:                    Tiền mặt
 Ghi chú:                                           
 

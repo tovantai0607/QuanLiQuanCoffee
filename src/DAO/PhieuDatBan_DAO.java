@@ -1,5 +1,4 @@
 package DAO;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -50,7 +49,9 @@ public class PhieuDatBan_DAO {
 	}
 
 	public ArrayList<PhieuDatBan> layPhieuDatBanHopLe() {
-		String sql = "select * from PhieuDatBan where ngayDat >= CAST(GETDATE() AS DATE) and trangThai = 1";
+		String sql = "select * from PhieuDatBan where ngayDat >= CAST(GETDATE() AS DATE) and trangThai = 1"; // 1 là
+																												// chưa
+																												// dùng
 		ArrayList<PhieuDatBan> dsPB = new ArrayList<PhieuDatBan>();
 		try (PreparedStatement pstm = con.prepareStatement(sql)) {
 			ResultSet rs = pstm.executeQuery();
@@ -240,5 +241,22 @@ public class PhieuDatBan_DAO {
 		}
 		return false;
 	}
+	
+	public String taoMaPhieuDatMoi() {
+		String sql = "SELECT TOP 1 maPhieuDat FROM PhieuDatBan ORDER BY maPhieuDat DESC";
 
+		try (PreparedStatement pstm = con.prepareStatement(sql)) {
+			ResultSet rs = pstm.executeQuery();
+
+			if (rs.next()) {
+				String maCuoi = rs.getString("maPhieuDat"); // ví dụ PDB009
+				int so = Integer.parseInt(maCuoi.substring(3));
+				return String.format("PDB%03d", so + 1);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return "PDB001";
+	}
 }

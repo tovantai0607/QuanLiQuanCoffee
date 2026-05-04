@@ -5,22 +5,22 @@
 
              HÓA ĐƠN BÁN HÀNG
 
-Mã HĐ:       HD008
+Mã HĐ:       HD004
 Mã NV:       NV001
-Ngày tạo:    04/05/2026 14:31:20
-Mã KH:       KH001
+Ngày tạo:    04/05/2026 13:57:28
+Mã KH:       
 
-Tên khách hàng:  Nguyễn Văn An
-Mã bàn:       B002
+Tên khách hàng:  Khách vãng lai
+Mã bàn:       
 --------------------------------------------------
 Tên Sản Phẩm               SL    Đơn Giá Thành Tiền
 --------------------------------------------------
-Espresso                    1      40000      40000
-Trà vải                     1      45000      45000
+Bánh Tiramisu               1      35000      35000
+Chanh tuyết                 1      50000      50000
 --------------------------------------------------
 Tổng tiền:                                    85000 VND
-Giảm giá:                                      9750 VND
-Thành tiền:                                   75250 VND
+Giảm giá:                                     42500 VND
+Thành tiền:                                   42500 VND
 Phương thức thanh toán:                    Tiền mặt
 Ghi chú:                                           
 
