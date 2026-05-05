@@ -41,12 +41,18 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 
+import DAO.KhachHang_DAO;
 import DAO.LoaiSanPham_DAO;
 import DAO.SanPham_DAO;
 import Entity.ChiTietHoaDon;
 import Entity.HoaDon;
+import Entity.KhachHang;
 import Entity.LoaiSanPham;
 import Entity.SanPham;
+
+import java.awt.Color;
+import javax.swing.BorderFactory;
+import javax.swing.JCheckBox;
 
 public class Menu_GUI extends JPanel implements ActionListener, ComponentListener {
 
@@ -65,11 +71,19 @@ public class Menu_GUI extends JPanel implements ActionListener, ComponentListene
 	private JButton btnXoa;
 	private SanPham_DAO sp_dao;
 	private LoaiSanPham_DAO loaiSP_dao;
+	private KhachHang_DAO kh_dao;
 	private JButton btnSearch;
 	private JPanel pnFilterRight;
 	private JPanel pnFilterLelf;
 	private JTextArea txtGhiChu;
 	private JLabel lblGhiChu;
+
+	// === Cụm giao diện tìm kiếm / gán khách hàng ===
+	private JCheckBox chkKhachVangLai;
+	private JTextField txtTimKH;
+	private JButton btnTimKH;
+	private JLabel lblTrangThaiKH;
+	private JPanel pnTimKH; // panel chứa ô tìm kiếm (ẩn/hiện theo checkbox)
 
 	private HoaDon hoaDonHienTai;
 
@@ -77,6 +91,7 @@ public class Menu_GUI extends JPanel implements ActionListener, ComponentListene
 		this.mainFrame = mainFrame;
 		this.sp_dao = new SanPham_DAO();
 		this.loaiSP_dao = new LoaiSanPham_DAO();
+		this.kh_dao = new KhachHang_DAO();
 
 		this.hoaDonHienTai = new HoaDon();
 		this.hoaDonHienTai.setNgayTao(LocalDate.now());
@@ -106,6 +121,8 @@ public class Menu_GUI extends JPanel implements ActionListener, ComponentListene
 		btnTaoHoaDon.addActionListener(this);
 		btnTrangChu.addActionListener(this);
 		btnXoa.addActionListener(this);
+		btnTimKH.addActionListener(this);
+		chkKhachVangLai.addActionListener(this);
 		cbFilter.addActionListener(this);
 		addComponentListener(this);
 	}
@@ -113,7 +130,42 @@ public class Menu_GUI extends JPanel implements ActionListener, ComponentListene
 	// Panel "Order"
 	private JPanel createOrderPanel() {
 		JPanel panel = new JPanel(new BorderLayout());
-		panel.add(new JLabel("Order", SwingConstants.CENTER), BorderLayout.NORTH);
+
+		// === Panel phía trên: Tiêu đề + Cụm tìm kiếm khách hàng ===
+		JPanel pnOrderTop = new JPanel();
+		pnOrderTop.setLayout(new BoxLayout(pnOrderTop, BoxLayout.Y_AXIS));
+
+		JLabel lblOrderTitle = new JLabel("Order", SwingConstants.CENTER);
+		lblOrderTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+		pnOrderTop.add(lblOrderTitle);
+
+		// --- Checkbox khách vãng lai ---
+		chkKhachVangLai = new JCheckBox("Khách vãng lai (không tích điểm)", true);
+		chkKhachVangLai.setFont(new Font("Arial", Font.PLAIN, 12));
+		chkKhachVangLai.setAlignmentX(Component.LEFT_ALIGNMENT);
+		pnOrderTop.add(Box.createVerticalStrut(5));
+		pnOrderTop.add(chkKhachVangLai);
+
+		// --- Panel tìm kiếm khách hàng (ẩn khi checkbox checked) ---
+		pnTimKH = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 2));
+		pnTimKH.add(new JLabel("SĐT / Mã Khách:"));
+		txtTimKH = new JTextField(12);
+		pnTimKH.add(txtTimKH);
+		btnTimKH = new JButton("Tìm / Gán");
+		pnTimKH.add(btnTimKH);
+		pnTimKH.setAlignmentX(Component.LEFT_ALIGNMENT);
+		pnTimKH.setVisible(false); // Mặc định ẩn vì checkbox đang checked
+		pnOrderTop.add(pnTimKH);
+
+		// --- Label trạng thái khách hàng ---
+		lblTrangThaiKH = new JLabel("Khách: Vãng lai");
+		lblTrangThaiKH.setFont(new Font("Arial", Font.BOLD, 13));
+		lblTrangThaiKH.setForeground(new Color(0, 102, 204));
+		lblTrangThaiKH.setAlignmentX(Component.LEFT_ALIGNMENT);
+		lblTrangThaiKH.setBorder(BorderFactory.createEmptyBorder(3, 5, 5, 0));
+		pnOrderTop.add(lblTrangThaiKH);
+
+		panel.add(pnOrderTop, BorderLayout.NORTH);
 
 		String[] orderCols = { "Tên sản phẩm", "Số lượng", "Đơn Giá", "Tổng tiền" };
 		orderModel = new DefaultTableModel(orderCols, 0) {
@@ -397,6 +449,10 @@ public class Menu_GUI extends JPanel implements ActionListener, ComponentListene
 			taoHoaDon();
 		} else if (o == btnSearch) {
 			actionSearch();
+		} else if (o == chkKhachVangLai) {
+			xuLyCheckboxKhachVangLai();
+		} else if (o == btnTimKH) {
+			xuLyTimKhachHang();
 		}
 	}
 
@@ -438,6 +494,65 @@ public class Menu_GUI extends JPanel implements ActionListener, ComponentListene
 		}
 	}
 
+	/**
+	 * Xử lý khi toggle checkbox "Khách vãng lai".
+	 * Checked → ẩn tìm kiếm, gán KH000.
+	 * Unchecked → hiện tìm kiếm để nhân viên nhập SĐT.
+	 */
+	private void xuLyCheckboxKhachVangLai() {
+		boolean isVangLai = chkKhachVangLai.isSelected();
+		pnTimKH.setVisible(!isVangLai);
+
+		if (isVangLai) {
+			// Reset về khách vãng lai
+			KhachHang khVL = kh_dao.timKhachHangTheoMaKH(MainFrame.MA_KHACH_VANG_LAI);
+			hoaDonHienTai.setKhachHang(khVL);
+			mainFrame.setMaKhachHang(MainFrame.MA_KHACH_VANG_LAI);
+			lblTrangThaiKH.setText("Khách: Vãng lai");
+			lblTrangThaiKH.setForeground(new Color(0, 102, 204));
+			txtTimKH.setText("");
+		}
+		revalidate();
+		repaint();
+	}
+
+	/**
+	 * Xử lý tìm và gán khách hàng theo SĐT hoặc Mã KH.
+	 */
+	private void xuLyTimKhachHang() {
+		String input = txtTimKH.getText().trim();
+		if (input.isEmpty()) {
+			JOptionPane.showMessageDialog(this, "Vui lòng nhập SĐT hoặc Mã khách hàng!");
+			return;
+		}
+
+		// Thử tìm theo SĐT trước
+		KhachHang kh = kh_dao.timKhachHangTheoSDT(input);
+
+		// Nếu không tìm thấy theo SĐT → thử theo Mã KH
+		if (kh == null) {
+			kh = kh_dao.timKhachHangTheoMaKH(input);
+		}
+
+		if (kh != null) {
+			// Tìm thấy → gán khách hàng
+			hoaDonHienTai.setKhachHang(kh);
+			mainFrame.setMaKhachHang(kh.getMaKhachHang());
+			lblTrangThaiKH.setText("Khách: " + kh.getHoTen());
+			lblTrangThaiKH.setForeground(new Color(0, 153, 0));
+			JOptionPane.showMessageDialog(this, "Đã gán khách hàng thành công!\n"
+					+ "Tên: " + kh.getHoTen() + "\n"
+					+ "Mã KH: " + kh.getMaKhachHang(),
+					"Thành công", JOptionPane.INFORMATION_MESSAGE);
+		} else {
+			// Không tìm thấy
+			JOptionPane.showMessageDialog(this,
+					"Không tìm thấy khách hàng này trong hệ thống.\n"
+					+ "Kiểm tra lại SĐT/Mã KH hoặc đăng ký khách hàng mới tại mục Khách hàng.",
+					"Không tìm thấy", JOptionPane.WARNING_MESSAGE);
+		}
+	}
+
 	private void taoHoaDon() {
 		if (hoaDonHienTai.getDsChiTiet().isEmpty()) {
 			JOptionPane.showMessageDialog(this, "Chưa chọn sản phẩm nào");
@@ -445,6 +560,13 @@ public class Menu_GUI extends JPanel implements ActionListener, ComponentListene
 		}
 
 		hoaDonHienTai.setGhiChu(txtGhiChu.getText().trim());
+
+		// Đảm bảo khách hàng đã được gán (mặc định KH000 nếu là khách vãng lai)
+		if (hoaDonHienTai.getKhachHang() == null && chkKhachVangLai.isSelected()) {
+			KhachHang khVL = kh_dao.timKhachHangTheoMaKH(MainFrame.MA_KHACH_VANG_LAI);
+			hoaDonHienTai.setKhachHang(khVL);
+			mainFrame.setMaKhachHang(MainFrame.MA_KHACH_VANG_LAI);
+		}
 
 		mainFrame.chuyenHoaDonSangManHinhThanhToan(hoaDonHienTai);
 
@@ -494,8 +616,13 @@ public class Menu_GUI extends JPanel implements ActionListener, ComponentListene
 
 	@Override
 	public void componentShown(ComponentEvent e) {
-		// TODO Auto-generated method stub
 		loadMenuData();
+		// Reset trạng thái khách hàng khi vào màn hình Menu
+		chkKhachVangLai.setSelected(true);
+		pnTimKH.setVisible(false);
+		lblTrangThaiKH.setText("Khách: Vãng lai");
+		lblTrangThaiKH.setForeground(new Color(0, 102, 204));
+		txtTimKH.setText("");
 	}
 
 	@Override

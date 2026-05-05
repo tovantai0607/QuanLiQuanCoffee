@@ -7,21 +7,20 @@
 
 Mã HĐ:       HD005
 Mã NV:       NV001
-Ngày tạo:    04/05/2026 14:08:20
+Ngày tạo:    05/05/2026 07:49:34
 Mã KH:       KH001
 
 Tên khách hàng:  Nguyễn Văn An
-Mã bàn:       B005
+Mã bàn:       B001
 --------------------------------------------------
 Tên Sản Phẩm               SL    Đơn Giá Thành Tiền
 --------------------------------------------------
-Trà đào cam sả              1      45000      45000
-Chanh tuyết                 1      50000      50000
-Cacao đá xay                1      55000      55000
+Cà phê đen                  3      25000      75000
+Bánh Mousse Chanh dây       1      40000      40000
 --------------------------------------------------
-Tổng tiền:                                   150000 VND
-Giảm giá:                                     90000 VND
-Thành tiền:                                   60000 VND
+Tổng tiền:                                   115000 VND
+Giảm giá:                                     11500 VND
+Thành tiền:                                  103500 VND
 Phương thức thanh toán:                    Tiền mặt
 Ghi chú:                                           
 

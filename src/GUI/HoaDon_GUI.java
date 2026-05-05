@@ -549,7 +549,8 @@ public class HoaDon_GUI extends JPanel implements ActionListener {
 			KhachHang kh = hoaDonHienTai.getKhachHang();
 			String message = "Thanh toán thành công!";
 
-			if (kh != null) {
+			// Chỉ tích điểm/trừ điểm nếu KHÔNG phải khách vãng lai (KH000)
+			if (kh != null && !kh.getMaKhachHang().equals(MainFrame.MA_KHACH_VANG_LAI)) {
 				double diemDaSuDung = hoaDonHienTai.getTienGiamTuDiem().doubleValue();
 				double diemHienCo = kh.getDiemTichLuy();
 				double diemMoi;

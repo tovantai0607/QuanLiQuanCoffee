@@ -7,22 +7,19 @@
 
 Mã HĐ:       HD006
 Mã NV:       NV001
-Ngày tạo:    04/05/2026 14:09:35
-Mã KH:       KH001
+Ngày tạo:    05/05/2026 17:32:21
+Mã KH:       KH000
 
-Tên khách hàng:  Nguyễn Văn An
-Mã bàn:       B001
+Tên khách hàng:  Khách vãng lai
+Mã bàn:       B003
 --------------------------------------------------
 Tên Sản Phẩm               SL    Đơn Giá Thành Tiền
 --------------------------------------------------
-Cappuccino                  1      50000      50000
-Chanh tuyết                 1      50000      50000
-Bánh Tiramisu               1      35000      35000
-Cookies & Cream             1      60000      60000
+Cà phê sữa                  1      30000      30000
 --------------------------------------------------
-Tổng tiền:                                   195000 VND
-Giảm giá:                                     97500 VND
-Thành tiền:                                   97500 VND
+Tổng tiền:                                    30000 VND
+Giảm giá:                                         0 VND
+Thành tiền:                                   30000 VND
 Phương thức thanh toán:                    Tiền mặt
 Ghi chú:                                           
 

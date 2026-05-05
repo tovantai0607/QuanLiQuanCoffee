@@ -22,7 +22,11 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
 import DAO.PhieuDatBan_DAO;
-import Entity.HoaDon; // === THÊM IMPORT ===
+import DAO.KhachHang_DAO;
+import Entity.Ban;
+import Entity.HoaDon;
+import Entity.KhachHang;
+import java.time.LocalDate;
 public class MainFrame extends JFrame {
 
 	public static final String KEY_DAT_BAN = "DatBan_GUI.java";
@@ -34,6 +38,7 @@ public class MainFrame extends JFrame {
 	public static final String KEY_THONG_KE = "ThongKe_GUI.java";
 	public static final String KEY_CHON_BAN = "ChonBan_GUI.java";
 	public static final String KEY_HOA_DON = "HoaDon_GUI.java";
+	public static final String KEY_NHAN_VIEN = "NhanVien_GUI.java";
 
 	private CardLayout cardLayout;
 	private JPanel contentPanel;
@@ -42,8 +47,12 @@ public class MainFrame extends JFrame {
 	private HoaDon_GUI hoadon_gui;
 	private JButton btnNavHoaDon;
 	private PhieuDatBan_DAO pdb_dao;
+	private KhachHang_DAO kh_dao;
 
-	// tạo biến tòa cục để lưu trữ maBan và PDB
+	// Mã khách hàng mặc định cho khách vãng lai
+	public static final String MA_KHACH_VANG_LAI = "KH000";
+
+	// tạo biến toàn cục để lưu trữ maBan và PDB
 	private ArrayList<String> dsMaBan;
 	private String maPhieuDatBan;
 	private String maKhachHang;
@@ -52,6 +61,10 @@ public class MainFrame extends JFrame {
 		dsMaBan = new ArrayList<String>();
 		this.hoadon_gui = new HoaDon_GUI(this);
 		this.pdb_dao = new PhieuDatBan_DAO();
+		this.kh_dao = new KhachHang_DAO();
+
+		// Tự động tạo khách vãng lai KH000 nếu chưa có trong DB
+		seedKhachVangLai();
 		setTitle("Quản Lý Quán Coffee");
 		setSize(1000, 750);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -96,6 +109,9 @@ public class MainFrame extends JFrame {
 		KhachHang_GUI panelKhachHang = new KhachHang_GUI(this);
 		contentPanel.add(panelKhachHang, KEY_KHACH_HANG);
 
+		NhanVien_GUI panelNhanVien = new NhanVien_GUI(this);
+		contentPanel.add(panelNhanVien, KEY_NHAN_VIEN);
+
 		KhuyenMai_GUI panelKhuyenMai = new KhuyenMai_GUI(this);
 		contentPanel.add(panelKhuyenMai, KEY_GIAM_GIA);
 
@@ -110,6 +126,7 @@ public class MainFrame extends JFrame {
 		addNavButton("Menu", "/img/icon-menu.png", KEY_BAN_HANG, navListener);
 		addNavButton("Sản phẩm", "/img/icon-product.png", KEY_SAN_PHAM, navListener);
 		addNavButton("Khách hàng", "/img/icon-user.png", KEY_KHACH_HANG, navListener);
+		addNavButton("Nhân viên", "/img/icon-user.png", KEY_NHAN_VIEN, navListener);
 		addNavButton("Khuyến mãi", "/img/icon-discount.png", KEY_GIAM_GIA, navListener);
 		addNavButton("Thống kê", "/img/icon-statistic.png", KEY_THONG_KE, navListener);
 		btnNavHoaDon = addNavButton("Hóa đơn", "/img/icon-bill.png", KEY_HOA_DON, navListener);
@@ -216,6 +233,31 @@ public class MainFrame extends JFrame {
 
 	public void setMaKhachHang(String maKhachHang) {
 		this.maKhachHang = maKhachHang;
+	}
+
+	/**
+	 * Tự động tạo bản ghi "Khách vãng lai" (KH000) trong DB nếu chưa tồn tại.
+	 * Giúp không cần sửa DB thủ công.
+	 */
+	private void seedKhachVangLai() {
+		try {
+			KhachHang kh = kh_dao.timKhachHangTheoMaKH(MA_KHACH_VANG_LAI);
+			if (kh == null) {
+				KhachHang khVangLai = new KhachHang(
+					MA_KHACH_VANG_LAI,
+					"Khách vãng lai",
+					"0000000000",
+					"vanglai@quancoffee.vn",
+					"",
+					0,
+					LocalDate.now()
+				);
+				kh_dao.themKhachHang(khVangLai);
+				System.out.println("Đã tự động tạo khách vãng lai KH000");
+			}
+		} catch (Exception e) {
+			System.err.println("Lưu ý: Không thể tạo khách vãng lai KH000: " + e.getMessage());
+		}
 	}
 
 }

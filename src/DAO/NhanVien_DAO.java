@@ -152,4 +152,17 @@ public class NhanVien_DAO {
 		}
 		return null;
 	}
+
+	public String getMaNhanVienCuoiCung() {
+		String sql = "select top 1 maNhanVien from NhanVien order by maNhanVien DESC";
+		try (PreparedStatement pstm = con.prepareStatement(sql)) {
+			ResultSet rs = pstm.executeQuery();
+			if (rs.next()) {
+				return rs.getString("maNhanVien");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
 }

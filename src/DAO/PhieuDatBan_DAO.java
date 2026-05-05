@@ -241,6 +241,50 @@ public class PhieuDatBan_DAO {
 		}
 		return false;
 	}
+
+	public int demPhieuDatCu() {
+		String sql = "select count(*) from PhieuDatBan where ngayDat < CAST(GETDATE() AS DATE)";
+		try (PreparedStatement pstm = con.prepareStatement(sql)) {
+			ResultSet rs = pstm.executeQuery();
+			if (rs.next()) {
+				return rs.getInt(1);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return 0;
+	}
+
+	public int xoaTatCaPhieuDatCu() {
+		String sqlXoaChiTiet = "delete from ChiTietDatBan where maPhieuDat in "
+				+ "(select maPhieuDat from PhieuDatBan where ngayDat < CAST(GETDATE() AS DATE))";
+		String sqlXoaPhieu = "delete from PhieuDatBan where ngayDat < CAST(GETDATE() AS DATE)";
+
+		try {
+			con.setAutoCommit(false);
+			try (PreparedStatement pstmXoaChiTiet = con.prepareStatement(sqlXoaChiTiet);
+					PreparedStatement pstmXoaPhieu = con.prepareStatement(sqlXoaPhieu)) {
+				pstmXoaChiTiet.executeUpdate();
+				int soPhieuDaXoa = pstmXoaPhieu.executeUpdate();
+				con.commit();
+				return soPhieuDaXoa;
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			try {
+				con.rollback();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+		} finally {
+			try {
+				con.setAutoCommit(true);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return -1;
+	}
 	
 	public String taoMaPhieuDatMoi() {
 		String sql = "SELECT TOP 1 maPhieuDat FROM PhieuDatBan ORDER BY maPhieuDat DESC";

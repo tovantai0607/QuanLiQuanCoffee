@@ -148,39 +148,22 @@ public class ChonBan_GUI extends JPanel implements ActionListener, ComponentList
 			return;
 		}
 
-		int hoiNhac = JOptionPane.showConfirmDialog(
-				this,
-				"Chắc chắn chọn Bàn " + ban_selected.getMaBan() + "?",
-				"Xác nhận",
-				JOptionPane.YES_NO_OPTION
-		);
-
-		if (hoiNhac != JOptionPane.YES_OPTION) {
-			return;
-		}
-
 		try {
-			// 1. Nhập mã khách hàng
-			String maKH = JOptionPane.showInputDialog(this, "Nhập mã khách hàng:", "KH001");
-
-			if (maKH == null || maKH.trim().isEmpty()) {
-				JOptionPane.showMessageDialog(this, "Bạn chưa nhập mã khách hàng!");
-				return;
-			}
-
-			maKH = maKH.trim();
-
-			KhachHang kh = kh_dao.timKhachHangTheoMaKH(maKH);
-
+			// 1. Tự động lấy khách vãng lai KH000 — không hiện popup nhập thông tin
+			KhachHang kh = kh_dao.timKhachHangTheoMaKH(MainFrame.MA_KHACH_VANG_LAI);
 			if (kh == null) {
-				JOptionPane.showMessageDialog(this, "Không tìm thấy khách hàng có mã: " + maKH);
-				return;
+				// Fallback: lấy khách hàng đầu tiên trong danh sách
+				java.util.List<KhachHang> dsKH = kh_dao.layTatCa();
+				if (!dsKH.isEmpty()) {
+					kh = dsKH.get(0);
+				} else {
+					JOptionPane.showMessageDialog(this, "Không có khách hàng nào trong hệ thống!");
+					return;
+				}
 			}
 
 			// 2. Lấy nhân viên mặc định
-			// Nếu app của bạn có đăng nhập thì sau này nên lấy mã nhân viên đang đăng nhập.
 			NhanVien nv = nv_dao.timTheoMa("NV001");
-
 			if (nv == null) {
 				JOptionPane.showMessageDialog(this, "Không tìm thấy nhân viên NV001 trong database!");
 				return;
@@ -189,7 +172,7 @@ public class ChonBan_GUI extends JPanel implements ActionListener, ComponentList
 			// 3. Tạo mã phiếu mới
 			String maPDB = pdb_dao.taoMaPhieuDatMoi();
 
-			// 4. Tạo phiếu đặt bàn
+			// 4. Tạo phiếu đặt bàn — gán khách vãng lai mặc định
 			LocalDate ngayDat = LocalDate.now();
 			LocalTime gioBatDau = LocalTime.now().withSecond(0).withNano(0);
 			LocalTime gioKetThuc = gioBatDau.plusHours(2);
@@ -200,24 +183,22 @@ public class ChonBan_GUI extends JPanel implements ActionListener, ComponentList
 					gioBatDau,
 					gioKetThuc,
 					1,
-					"Đặt bàn trực tiếp",
+					"Khách vãng lai",
 					1,
 					kh,
 					nv
 			);
 
-			// 5. Tạo chi tiết đặt bàn cho bàn vừa chọn
+			// 5. Tạo chi tiết đặt bàn
 			ChiTietDatBan ct = new ChiTietDatBan(
 					pdb,
 					ban_selected,
 					"Đặt bàn trực tiếp"
 			);
-
 			pdb.themChiTiet(ct);
 
 			// 6. Lưu phiếu đặt bàn xuống database
 			boolean kq = pdb_dao.themPhieuDatBan(pdb);
-
 			if (!kq) {
 				JOptionPane.showMessageDialog(this, "Tạo phiếu đặt bàn thất bại!");
 				return;
@@ -225,22 +206,19 @@ public class ChonBan_GUI extends JPanel implements ActionListener, ComponentList
 
 			// 7. Lưu dữ liệu trung gian vào MainFrame
 			String maBan = ban_selected.getMaBan();
-
 			ArrayList<String> dsMaBan = new ArrayList<String>();
 			dsMaBan.add(maBan);
 
 			mainFrame.setDsMaBan(dsMaBan);
 			mainFrame.setMaPhieuDatBan(maPDB);
-			mainFrame.setMaKhachHang(maKH);
+			mainFrame.setMaKhachHang(kh.getMaKhachHang());
 
-			// 8. Cập nhật trạng thái bàn
+			// 8. Cập nhật trạng thái bàn sang "Đang phục vụ"
 			ban_dao.capNhatTrangThaiBan(maBan, 1);
 
 			loadBanData();
 
-			JOptionPane.showMessageDialog(this, "Đã tạo phiếu đặt bàn: " + maPDB);
-
-			// 9. Chuyển sang màn hình menu
+			// 9. Chuyển ngay sang màn hình Menu — không hiện thông báo
 			mainFrame.switchToPanel(mainFrame.KEY_BAN_HANG);
 
 		} catch (Exception e) {
@@ -333,7 +311,6 @@ public class ChonBan_GUI extends JPanel implements ActionListener, ComponentList
 
 	@Override
 	public void componentShown(ComponentEvent e) {
-		// TODO Auto-generated method stub
 		loadBanData();
 	}
 
